@@ -1,5 +1,53 @@
 # team_RBX — 4인 MQTT 반응속도 퀴즈 버저
 
+## 스킬 설치
+
+Node.js 18 이상이 설치되어 있고 `npx --version`이 출력되는 환경에서 실행합니다.
+
+### 기본 설치 — 모든 지원 에이전트
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g --agent '*' -y
+```
+
+### 에이전트별 설치
+
+#### Codex
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a codex -y
+```
+
+#### Claude Code
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a claude-code -y
+```
+
+#### Cursor
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a cursor -y
+```
+
+#### Gemini CLI
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a gemini-cli -y
+```
+
+#### GitHub Copilot
+
+```powershell
+npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a github-copilot -y
+```
+
+### 설치하지 않고 한 번만 사용
+
+```powershell
+npx skills use yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz
+```
+
 XIAO ESP32C6 네 대의 **BOOT 버튼**, **내장 LED**, **Wi-Fi**만 사용하는 반응속도 게임입니다. 외부 센서나 연결선은 필요 없습니다.
 
 **진행자 yohan의 노트북만** Mosquitto MQTT 브로커와 웹 대시보드를 실행합니다. GitHub에서 프로젝트나 스킬을 받는 나머지 팀원은 참가자이며, 자기 XIAO 펌웨어만 설정·업로드하여 yohan의 브로커에 접속합니다.
@@ -15,15 +63,9 @@ XIAO ESP32C6 네 대의 **BOOT 버튼**, **내장 LED**, **Wi-Fi**만 사용하�
 
 > `192.168.0.56`은 현재 브로커 주소입니다. 게임 전에 yohan이 `ipconfig`로 확인하고, 달라졌다면 새 주소를 참가자에게 알려야 합니다.
 
-## 0. npx로 AI 에이전트 스킬 설치
+## 설치 후 역할별 프롬프트
 
-Node.js 18 이상이 설치되어 있고 `npx --version`이 출력되는 환경에서 다음 명령을 실행합니다.
-
-```powershell
-npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a codex -y
-```
-
-설치 후 참가자는 Codex 프롬프트에서 다음처럼 요청합니다. 이름과 COM 포트는 각자 달라도 됩니다.
+설치 후 참가자는 에이전트 프롬프트에서 다음처럼 요청합니다. 이름과 COM 포트는 각자 달라도 됩니다.
 
 ```text
 $team-rbx-mqtt-quiz로 참가자로 참여할게. 브로커 IP는 192.168.0.56이고 내 이름은 minsu야. 연결된 XIAO ESP32C6를 찾아서 참가자 펌웨어를 업로드해줘. Wi-Fi 정보가 필요하면 나에게 물어보고 절대 GitHub에 올리지 마.
@@ -33,18 +75,6 @@ $team-rbx-mqtt-quiz로 참가자로 참여할게. 브로커 IP는 192.168.0.56�
 
 ```text
 $team-rbx-mqtt-quiz로 브로커 모드를 준비해줘. 나는 진행자 yohan이고, Mosquitto와 대시보드를 실행해서 참가자 접속을 확인할 거야. 내 노트북 Wi-Fi는 변경하지 마.
-```
-
-모든 감지된 AI 에이전트에 같은 스킬을 설치하려면 다음 명령을 사용합니다.
-
-```powershell
-npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g --agent '*' -y
-```
-
-설치하지 않고 한 번만 사용하려면 다음 명령을 사용할 수 있습니다.
-
-```powershell
-npx skills use yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz
 ```
 
 ```text
@@ -61,7 +91,7 @@ npx skills use yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz
 2. yohan 브로커 노트북의 현재 IP 주소. 현재는 `192.168.0.56`
 3. 다른 팀원과 겹치지 않는 자기 이름. 예: `minsu`
 
-참가자는 스킬 설치 후 위 정보를 프롬프트로 전달하고 보드를 USB로 연결하면 됩니다. Codex가 Arduino CLI 설치 확인, 설정 파일 생성, 컴파일, 업로드를 진행합니다. 완료 후 yohan이 자기 대시보드에서 참가자 이름이 `온라인`인지 확인합니다.
+참가자는 스킬 설치 후 위 정보를 프롬프트로 전달하고 보드를 USB로 연결하면 됩니다. 설치한 AI 에이전트가 Arduino CLI 설치 확인, 설정 파일 생성, 컴파일, 업로드를 진행합니다. 완료 후 yohan이 자기 대시보드에서 참가자 이름이 `온라인`인지 확인합니다.
 
 ## 1. 게임 진행 방식
 
