@@ -101,30 +101,30 @@
 <body>
 <main>
   <header>
-    <h1>MQTT QUIZ BUZZER</h1>
+    <h1>MQTT 반응속도 퀴즈</h1>
     <span id="connection">연결 중</span>
   </header>
 
   <section class="console">
     <div class="controls">
-      <button id="start" disabled>START<br>ROUND</button>
+      <button id="start" disabled>게임<br>시작</button>
       <button id="reset">게임 초기화</button>
     </div>
     <div id="scoreboard" class="scoreboard">
-      <span class="eyebrow">Broker decides by arrival order</span>
+      <span class="eyebrow">브로커 도착 순서로 승자를 판정합니다</span>
       <div id="phase">대기 중</div>
       <p id="detail">보드가 연결되면 라운드를 시작하세요.</p>
     </div>
   </section>
 
   <div class="section-head">
-    <h2>PLAYER NODES</h2>
-    <span id="count">0 ONLINE</span>
+    <h2>참가자 보드</h2>
+    <span id="count">0명 온라인</span>
   </div>
   <section id="players"><p id="empty">아직 연결된 보드가 없습니다.</p></section>
 
   <div class="section-head">
-    <h2>EVENT LOG</h2>
+    <h2>이벤트 기록</h2>
   </div>
   <ul id="events"></ul>
 </main>
@@ -162,7 +162,7 @@ const client = mqtt.connect(brokerUrl, { reconnectPeriod: 1500 })
 
 client.on('connect', () => {
   connected = true
-  connection.textContent = `ONLINE · ${brokerUrl}`
+  connection.textContent = `온라인 · ${brokerUrl}`
   connection.className = 'online'
   startButton.disabled = phase === 'waiting' || phase === 'armed'
   client.subscribe([
@@ -310,14 +310,14 @@ function renderGame() {
       : `대시보드 수신 기준 ${reactionMs} ms`
   } else {
     phaseText.textContent = '대기 중'
-    detail.textContent = 'START ROUND를 눌러 모든 보드를 준비시키세요.'
+    detail.textContent = '게임 시작을 눌러 모든 보드를 준비시키세요.'
   }
 }
 
 function renderPlayers() {
   const ids = Object.keys(devices).sort()
   const online = ids.filter(id => devices[id].status === 'online').length
-  count.textContent = `${online} ONLINE`
+  count.textContent = `${online}명 온라인`
   players.replaceChildren()
 
   if (!ids.length) {
@@ -344,7 +344,7 @@ function renderPlayers() {
     const state = document.createElement('div')
     state.className = 'device-state'
     const label = document.createElement('strong')
-    label.textContent = device.status === 'online' ? 'ONLINE' : 'OFFLINE'
+    label.textContent = device.status === 'online' ? '온라인' : '오프라인'
     state.append(label, document.createTextNode(` · LED ${device.led ? 'ON' : 'OFF'}`))
     card.append(head, state)
     players.append(card)

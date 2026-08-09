@@ -2,7 +2,18 @@
 
 XIAO ESP32C6 네 대의 **BOOT 버튼**, **내장 LED**, **Wi-Fi**만 사용하는 반응속도 게임입니다. 외부 센서나 연결선은 필요 없습니다.
 
-한 사람의 노트북이 Mosquitto MQTT 브로커와 웹 대시보드를 실행하고, 네 팀원의 XIAO가 같은 Wi-Fi를 통해 참여합니다.
+**진행자 yohan의 노트북만** Mosquitto MQTT 브로커와 웹 대시보드를 실행합니다. GitHub에서 프로젝트나 스킬을 받는 나머지 팀원은 참가자이며, 자기 XIAO 펌웨어만 설정·업로드하여 yohan의 브로커에 접속합니다.
+
+## 역할을 먼저 확인하세요
+
+| 역할 | 담당자 | 하는 일 |
+|---|---|---|
+| 브로커·진행자 | yohan | Mosquitto와 대시보드 실행, 게임 시작·초기화, 참가자 접속 확인 |
+| 참가자 | GitHub에서 받는 팀원 | 자기 보드에 Wi-Fi·브로커 IP·고유 이름을 설정하고 BOOT 버튼으로 참가 |
+
+참가자는 Mosquitto 브로커나 Python 웹 서버를 실행할 필요가 없습니다. 참가자 보드가 `192.168.0.56:1883`의 yohan 브로커에 MQTT로 연결되면, yohan의 대시보드가 `classroom/+/status`를 구독하여 해당 보드를 자동으로 표시합니다. 별도의 참가자 등록 과정은 없습니다.
+
+> `192.168.0.56`은 현재 브로커 주소입니다. 게임 전에 yohan이 `ipconfig`로 확인하고, 달라졌다면 새 주소를 참가자에게 알려야 합니다.
 
 ## 0. npx로 AI 에이전트 스킬 설치
 
@@ -12,10 +23,16 @@ Node.js 18 이상이 설치되어 있고 `npx --version`이 출력되는 환경�
 npx skills add yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz -g -a codex -y
 ```
 
-설치 후 Codex 프롬프트에서 다음처럼 요청할 수 있습니다.
+설치 후 참가자는 Codex 프롬프트에서 다음처럼 요청합니다. 이름과 COM 포트는 각자 달라도 됩니다.
 
 ```text
-$team-rbx-mqtt-quiz로 현재 폴더에 프로젝트를 설치하고 브로커 역할의 노트북을 설정해줘.
+$team-rbx-mqtt-quiz로 참가자로 참여할게. 브로커 IP는 192.168.0.56이고 내 이름은 minsu야. 연결된 XIAO ESP32C6를 찾아서 참가자 펌웨어를 업로드해줘. Wi-Fi 정보가 필요하면 나에게 물어보고 절대 GitHub에 올리지 마.
+```
+
+브로커인 yohan만 다음처럼 요청합니다.
+
+```text
+$team-rbx-mqtt-quiz로 브로커 모드를 준비해줘. 나는 진행자 yohan이고, Mosquitto와 대시보드를 실행해서 참가자 접속을 확인할 거야. 내 노트북 Wi-Fi는 변경하지 마.
 ```
 
 모든 감지된 AI 에이전트에 같은 스킬을 설치하려면 다음 명령을 사용합니다.
@@ -38,17 +55,25 @@ npx skills use yohan-is/team-rbx-mqtt-quiz --skill team-rbx-mqtt-quiz
 브라우저 ─────────────────────── HTTP 8080 ────────────────────────────────┘
 ```
 
+### 참가자가 준비할 정보는 세 가지뿐입니다
+
+1. yohan이 알려준 2.4GHz Wi-Fi 이름과 비밀번호
+2. yohan 브로커 노트북의 현재 IP 주소. 현재는 `192.168.0.56`
+3. 다른 팀원과 겹치지 않는 자기 이름. 예: `minsu`
+
+참가자는 스킬 설치 후 위 정보를 프롬프트로 전달하고 보드를 USB로 연결하면 됩니다. Codex가 Arduino CLI 설치 확인, 설정 파일 생성, 컴파일, 업로드를 진행합니다. 완료 후 yohan이 자기 대시보드에서 참가자 이름이 `온라인`인지 확인합니다.
+
 ## 1. 게임 진행 방식
 
 1. 모든 팀원의 보드를 USB로 연결하고 전원을 켭니다.
-2. 대시보드에서 네 보드가 `ONLINE`인지 확인합니다.
-3. 진행자가 `START ROUND`를 누릅니다.
+2. yohan이 자기 대시보드에서 네 보드가 `온라인`인지 확인합니다.
+3. yohan이 `게임 시작`을 누릅니다.
 4. 2~5초의 무작위 대기 시간이 시작됩니다. 이때 LED는 꺼져 있고 BOOT 버튼 입력은 무시됩니다.
 5. 대기 시간이 끝나면 네 보드의 내장 LED가 동시에 켜집니다.
 6. 참가자는 LED가 켜진 뒤 자기 보드의 BOOT 버튼을 짧게 누릅니다.
 7. 브로커에 가장 먼저 도착한 버튼 메시지를 대시보드가 승자로 판정합니다.
 8. 결과가 표시되는 즉시 모든 보드의 LED는 자동으로 꺼집니다.
-9. 다음 판은 `RESET`을 누른 뒤 다시 `START ROUND`를 누릅니다.
+9. 다음 판은 yohan이 `게임 초기화`를 누른 뒤 다시 `게임 시작`을 누릅니다.
 
 > BOOT 버튼을 누른 채로 보드 전원을 연결하거나 RESET 버튼을 누르지 마세요. 다운로드 모드로 진입할 수 있습니다.
 
@@ -119,7 +144,7 @@ ipconfig
 `무선 LAN 어댑터 Wi-Fi` 아래의 `IPv4 주소`를 찾습니다. 문서에서 사용하는 예시 주소는 다음과 같습니다.
 
 ```text
-192.168.0.100
+192.168.0.56
 ```
 
 이 주소는 공유기 재접속 후 바뀔 수 있습니다. 주소가 달라졌다면 각 보드의 `arduino_secrets.h`에서 `MQTT_HOST`를 새 주소로 바꾸고 다시 업로드해야 합니다. 대시보드도 새 주소로 접속합니다.
@@ -173,10 +198,10 @@ python -m http.server 8080 -d '.\web'
 이 창도 게임이 끝날 때까지 열어 둡니다. 브로커 노트북에서 아래 주소를 엽니다.
 
 ```text
-http://192.168.0.100:8080/dashboard.html
+http://192.168.0.56:8080/dashboard.html
 ```
 
-다른 팀원도 같은 Wi-Fi에 연결되어 있다면 자기 브라우저에서 같은 주소를 열 수 있습니다. 화면 오른쪽 위 브로커 상태가 `ONLINE`이면 WebSocket 연결까지 완료된 것입니다.
+yohan이 이 주소를 열어 게임을 진행합니다. 참가자는 대시보드를 열거나 조작할 필요가 없습니다. 화면 오른쪽 위 브로커 상태가 `온라인`이면 WebSocket 연결까지 완료된 것입니다.
 
 `mqtt.min.js`가 폴더 안에 포함되어 있으므로, 프로젝트를 받은 뒤에는 외부 CDN이나 인터넷 연결 없이도 대시보드가 동작합니다. 단, 노트북과 보드 사이의 로컬 Wi-Fi 연결은 계속 필요합니다.
 
@@ -248,7 +273,7 @@ firmware/mqtt_classroom/arduino_secrets.h
 ```cpp
 #define WIFI_SSID "YOUR_WIFI_SSID"
 #define WIFI_PASS "YOUR_WIFI_PASSWORD"
-#define MQTT_HOST "192.168.0.100"
+#define MQTT_HOST "192.168.0.56"
 #define MQTT_PORT 1883
 #define DEVICE_NAME "yohan"
 ```
@@ -323,10 +348,9 @@ arduino-cli monitor -p COM5 --config 115200
 정상이라면 다음 내용이 차례로 출력됩니다.
 
 ```text
-WiFi connected
-IP: ...
-Device: yohan
-MQTT connected
+Wi-Fi YOUR_WIFI_SSID 연결 중... 192.168.0.x
+장치 이름: yohan
+MQTT 브로커 192.168.0.56에 연결 중... 연결됨
 ```
 
 시리얼 모니터를 종료할 때는 `Ctrl+C`를 누릅니다. 모니터가 포트를 사용 중이면 다음 업로드가 실패할 수 있으므로 업로드 전에는 닫아야 합니다.
@@ -336,7 +360,7 @@ MQTT connected
 브로커 노트북에서 별도 PowerShell을 열고 다음 명령으로 네 팀원의 상태 메시지를 확인할 수 있습니다.
 
 ```powershell
-& 'C:\Program Files\mosquitto\mosquitto_sub.exe' -h 192.168.0.100 -p 1883 -t 'classroom/+/status' -v
+& 'C:\Program Files\mosquitto\mosquitto_sub.exe' -h 192.168.0.56 -p 1883 -t 'classroom/+/status' -v
 ```
 
 보드가 연결되면 다음과 비슷한 메시지가 표시됩니다.
@@ -349,7 +373,7 @@ classroom/minsu/status online
 게임 전체 MQTT 메시지를 보고 싶다면 다음 명령을 사용합니다.
 
 ```powershell
-& 'C:\Program Files\mosquitto\mosquitto_sub.exe' -h 192.168.0.100 -p 1883 -t 'classroom/#' -v
+& 'C:\Program Files\mosquitto\mosquitto_sub.exe' -h 192.168.0.56 -p 1883 -t 'classroom/#' -v
 ```
 
 이 명령의 IP도 브로커의 실제 IPv4 주소로 바꿔야 합니다. 종료는 `Ctrl+C`입니다.
@@ -363,7 +387,7 @@ classroom/minsu/status online
 3. Mosquitto를 `mosquitto.conf`와 함께 실행합니다.
 4. 별도 PowerShell에서 Python 웹 서버를 실행합니다.
 5. `http://브로커IP:8080/dashboard.html`을 엽니다.
-6. 대시보드 오른쪽 위에 `ONLINE`이 표시되는지 확인합니다.
+6. 대시보드 오른쪽 위에 `온라인`이 표시되는지 확인합니다.
 
 ### 각 참가자
 
@@ -371,19 +395,19 @@ classroom/minsu/status online
 2. 보드를 USB로 연결합니다.
 3. `arduino-cli board list`로 COM 포트를 확인합니다.
 4. 컴파일하고 업로드합니다.
-5. 시리얼 모니터에서 `MQTT connected`를 확인합니다.
-6. 대시보드에서 자기 이름의 카드가 `ONLINE`인지 확인합니다.
-7. `START ROUND` 뒤에는 BOOT에서 손을 떼고 기다립니다.
+5. 시리얼 모니터에서 MQTT 브로커에 `연결됨`을 확인합니다.
+6. yohan에게 대시보드에서 자기 이름의 카드가 `온라인`인지 확인해 달라고 합니다.
+7. `게임 시작` 뒤에는 BOOT에서 손을 떼고 기다립니다.
 8. 내장 LED가 켜지는 순간 BOOT를 한 번 짧게 누릅니다.
 9. 결과가 표시되고 모든 LED가 꺼졌는지 확인합니다.
 
 ### 진행자
 
-1. 네 플레이어가 모두 `ONLINE`인지 확인합니다.
-2. 참가자들이 BOOT 버튼에서 손을 뗀 상태에서 `START ROUND`를 누릅니다.
+1. 네 플레이어가 모두 `온라인`인지 확인합니다.
+2. 참가자들이 BOOT 버튼에서 손을 뗀 상태에서 `게임 시작`을 누릅니다.
 3. 무작위 대기 중 일찍 누른 입력은 인정되지 않는다고 안내합니다.
 4. 승자가 표시되고 LED가 자동으로 꺼지는지 확인합니다.
-5. `RESET`을 눌러 결과를 지운 뒤 다음 라운드를 시작합니다.
+5. `게임 초기화`를 눌러 결과를 지운 뒤 다음 라운드를 시작합니다.
 
 ## 13. MQTT 토픽
 
@@ -406,7 +430,7 @@ classroom/minsu/status online
 - 방화벽에서 TCP 8080을 허용했는지 확인합니다.
 - 먼저 브로커 노트북 자체에서 `http://localhost:8080/dashboard.html`을 열어 봅니다.
 
-### 화면은 열리지만 브로커가 `OFFLINE`
+### 화면은 열리지만 브로커가 `오프라인`
 
 - Mosquitto 실행 창이 열려 있는지 확인합니다.
 - Mosquitto가 반드시 `broker/mosquitto.conf`를 사용해 실행됐는지 확인합니다.
@@ -435,7 +459,7 @@ classroom/minsu/status online
 
 ### LED가 켜지지 않음
 
-- LED는 `START ROUND` 직후가 아니라 2~5초의 무작위 대기 후 켜집니다.
+- LED는 `게임 시작` 직후가 아니라 2~5초의 무작위 대기 후 켜집니다.
 - 대시보드가 `ARMED` 단계인지 확인합니다.
 - 보드가 MQTT에 연결되어 있는지 시리얼 로그를 확인합니다.
 - XIAO 내장 LED는 active-low이지만 펌웨어에서 반대로 처리하므로 사용자가 별도로 바꿀 것은 없습니다.
