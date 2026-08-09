@@ -1,0 +1,4 @@
+interface:
+  display_name: "team_RBX MQTT Quiz"
+  short_description: "XIAO ESP32C6 MQTT 퀴즈를 설치하고 실행합니다"
+  default_prompt: "$team-rbx-mqtt-quiz를 사용해 4인 XIAO ESP32C6 MQTT 반응속도 게임을 설치하고 실행해 주세요."
